@@ -1,0 +1,106 @@
+package com.moderador.controller;
+
+import com.moderador.model.Moderador;
+import com.moderador.model.Acao;
+import com.moderador.service.ModeradorService;
+import com.moderador.service.ScoreService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/moderadores")
+@CrossOrigin(origins = "*")
+@Tag(name = "Moderador Controller", description = "Endpoints para gerenciamento de moderadores")
+public class ModeradorController {
+
+    @Autowired
+    private ModeradorService moderadorService;
+
+    @Autowired
+    private ScoreService scoreService;
+
+    @GetMapping
+    @Operation(summary = "Lista todos os moderadores")
+    public ResponseEntity<List<Moderador>> listarTodos() {
+        return ResponseEntity.ok(moderadorService.listarTodos());
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Busca moderador por ID")
+    public ResponseEntity<Moderador> buscarPorId(@PathVariable Long id) {
+        return moderadorService.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    @Operation(summary = "Cria um novo moderador")
+    public ResponseEntity<Moderador> criar(@Valid @RequestBody Moderador moderador) {
+        return ResponseEntity.ok(moderadorService.salvar(moderador));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualiza um moderador")
+    public ResponseEntity<Moderador> atualizar(@PathVariable Long id, @Valid @RequestBody Moderador moderador) {
+        moderador.setId(id);
+        return ResponseEntity.ok(moderadorService.salvar(moderador));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Remove um moderador")
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        moderadorService.deletar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/acao")
+    @Operation(summary = "Registra uma ação de moderação")
+    public ResponseEntity<Map<String, Object>> registrarAcao(
+            @PathVariable Long id,
+            @RequestParam String tipo,
+            @RequestParam String descricao,
+            @RequestParam(required = false) Long alvoId,
+            @RequestParam(required = false) String alvoNome) {
+        
+        Acao acao = scoreService.registrarAcao(id, tipo, descricao, alvoId, alvoNome);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("mensagem", "Ação registrada com sucesso!");
+        response.put("acao", acao);
+        response.put("pontos_ganhos", acao.getPontuacao());
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/historico")
+    @Operation(summary = "Histórico de ações do moderador")
+    public ResponseEntity<List<Acao>> getHistorico(@PathVariable Long id) {
+        return ResponseEntity.ok(scoreService.getHistorico(id));
+    }
+
+    @GetMapping("/ranking")
+    @Operation(summary = "Ranking de moderadores")
+    public ResponseEntity<List<Moderador>> getRanking() {
+        return ResponseEntity.ok(moderadorService.getRanking());
+    }
+
+    @GetMapping("/stats")
+    @Operation(summary = "Estatísticas do sistema")
+    public ResponseEntity<Map<String, Object>> getEstatisticas() {
+        return ResponseEntity.ok(moderadorService.getEstatisticas());
+    }
+
+    @GetMapping("/niveis")
+    @Operation(summary = "Lista todos os níveis e pontuações")
+    public ResponseEntity<List<Map<String, Object>>> getNiveis() {
+        return ResponseEntity.ok(moderadorService.getNiveis());
+    }
+}
