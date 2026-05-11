@@ -1,0 +1,74 @@
+package com.moderatorscore.app.data.models
+
+import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
+import java.util.Date
+
+@Parcelize
+data class Moderador(
+    @SerializedName("id")
+    val id: Long,
+    
+    @SerializedName("login")
+    val login: String,
+    
+    @SerializedName("nome")
+    val nome: String,
+    
+    @SerializedName("email")
+    val email: String,
+    
+    @SerializedName("area_atuacao")
+    val areaAtuacao: String,
+    
+    @SerializedName("moderar_chat")
+    val moderarChat: Boolean = false,
+    
+    @SerializedName("remover_conteudo")
+    val removerConteudo: Boolean = false,
+    
+    @SerializedName("score_total")
+    val scoreTotal: Int = 0,
+    
+    @SerializedName("nivel")
+    val nivel: String = "BRONZE",
+    
+    @SerializedName("total_acoes")
+    val totalAcoes: Int = 0,
+    
+    @SerializedName("ultima_atividade")
+    val ultimaAtividade: Date? = null,
+    
+    @SerializedName("avatar_url")
+    val avatarUrl: String? = null
+) : Parcelable {
+    
+    fun getNivelCor(): Int = when (nivel) {
+        "BRONZE" -> R.color.nivel_bronze
+        "PRATA" -> R.color.nivel_prata
+        "OURO" -> R.color.nivel_ouro
+        "DIAMANTE" -> R.color.nivel_diamante
+        "LENDARIO" -> R.color.nivel_lendario
+        else -> R.color.nivel_bronze
+    }
+    
+    fun getNivelIcon(): Int = when (nivel) {
+        "BRONZE" -> R.drawable.ic_bronze
+        "PRATA" -> R.drawable.ic_prata
+        "OURO" -> R.drawable.ic_ouro
+        "DIAMANTE" -> R.drawable.ic_diamante
+        "LENDARIO" -> R.drawable.ic_lendario
+        else -> R.drawable.ic_bronze
+    }
+    
+    fun getProgressoProximoNivel(): Float {
+        return when {
+            scoreTotal < 500 -> scoreTotal.toFloat() / 500
+            scoreTotal < 1000 -> (scoreTotal - 500).toFloat() / 500
+            scoreTotal < 2000 -> (scoreTotal - 1000).toFloat() / 1000
+            scoreTotal < 5000 -> (scoreTotal - 2000).toFloat() / 3000
+            else -> 1f
+        }
+    }
+}
